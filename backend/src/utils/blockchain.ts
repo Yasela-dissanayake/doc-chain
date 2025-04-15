@@ -15,7 +15,7 @@ if (!rpcUrl || !privateKey || !contractAddress) {
 }
 
 // Set up provider
-const provider = new ethers.JsonRpcProvider(rpcUrl);
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
 // Set up signer
 export const signer = new ethers.Wallet(privateKey, provider);

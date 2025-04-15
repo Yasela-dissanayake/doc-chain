@@ -4,22 +4,36 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import documentRoutes from "./routes/documentRoutes";
+import { AppDataSource } from "./AppDataSource";
+import transferRoutes from "./routes/transferRoutes";
+import paymentProofRoutes from "./routes/paymentProofRoutes";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(bodyParser.json());
+// Initialize database connection before starting the server
+AppDataSource.initialize()
+  .then(() => {
+    console.log("Database connection established");
 
-// Routes
-app.use("/api/documents", documentRoutes);
+    app.use(cors());
+    app.use(bodyParser.json());
 
-app.get("/", (_req, res) => {
-  res.send("API Running");
-});
+    // Routes
+    app.use("/api/documents", documentRoutes);
+    app.use("/api/transfer", transferRoutes);
+    app.use("/api/payment-proof", paymentProofRoutes);
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+    app.get("/", (_req, res) => {
+      res.send("API Running");
+    });
+
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Error during Data Source initialization", error);
+  });

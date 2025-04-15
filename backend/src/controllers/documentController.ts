@@ -1,25 +1,30 @@
 import { Request, Response } from "express";
 import { Document } from "../entities/Document";
-import { contract, signer } from "../utils/blockchain";
+import { contract } from "../utils/blockchain";
 import { AppDataSource } from "../AppDataSource";
+import { uploadFileToIPFS } from "../utils/uploadToIPFS";
 
 export const registerDocument = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { name, cid, docType, ownerId } = req.body;
+    const { name, docType, ownerId } = req.body;
+    const file = req.file; // multer adds this
 
-    if (!cid || !name || !docType || !ownerId) {
+    if (!file || !name || !docType || !ownerId) {
       res.status(400).json({ error: "Missing required fields" });
-      return; // Added return here to exit the function
+      return;
     }
 
-    // Save to smart contract
+    // Upload file to IPFS using multer-provided path and original name
+    const cid = await uploadFileToIPFS(file.path, file.originalname);
+
+    // Register in smart contract
     const tx = await contract.registerDocument(docType, ownerId, cid);
     await tx.wait();
 
-    // Save to DB
+    // Save to database
     const documentRepo = AppDataSource.getRepository(Document);
     const doc = documentRepo.create({
       name,
@@ -35,7 +40,22 @@ export const registerDocument = async (
       .status(201)
       .json({ message: "Document registered successfully", txHash: tx.hash });
   } catch (error) {
-    console.error(error);
+    console.error("Error registering document:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getDocuments = async (_req: Request, res: Response) => {
+  try {
+    const documentRepo = AppDataSource.getRepository(Document);
+
+    const documents = await documentRepo.find({
+      order: { timestamp: "DESC" },
+    });
+
+    res.status(200).json({ success: true, data: documents });
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
