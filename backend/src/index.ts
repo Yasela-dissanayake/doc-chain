@@ -5,6 +5,8 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import documentRoutes from "./routes/documentRoutes";
 import { AppDataSource } from "./AppDataSource";
+import transferRoutes from "./routes/transferRoutes";
+import paymentProofRoutes from "./routes/paymentProofRoutes";
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ AppDataSource.initialize()
 
     // Routes
     app.use("/api/documents", documentRoutes);
+    app.use("/api/transfer", transferRoutes);
+    app.use("/api/payment-proof", paymentProofRoutes);
 
     app.get("/", (_req, res) => {
       res.send("API Running");

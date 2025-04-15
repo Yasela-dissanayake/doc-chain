@@ -44,3 +44,18 @@ export const registerDocument = async (
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const getDocuments = async (_req: Request, res: Response) => {
+  try {
+    const documentRepo = AppDataSource.getRepository(Document);
+
+    const documents = await documentRepo.find({
+      order: { timestamp: "DESC" },
+    });
+
+    res.status(200).json({ success: true, data: documents });
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
